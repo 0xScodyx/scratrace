@@ -7,7 +7,7 @@ name = "scratrace"
 version = "0.1.0"
 description = "OSINT CLI tool with an interactive rich-powered menu"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "scratrace" }]
 dependencies = [
