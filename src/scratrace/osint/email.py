@@ -1,0 +1,3 @@
+class Mail:
+    # TODO: 
+    pass

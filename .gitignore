@@ -216,3 +216,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+.cache/
+
+# OSINT working artifacts
+tests/.dead_sites*.json
+tests/.lying.json
+.dbg*.txt
+.probe.txt
+.pytest_out.txt
+.run.txt
+data.json
+extracted_links_full.txt
+links_by_site.txt
+links_only.txt
+script*.py
