@@ -1,14 +1,16 @@
 <div align="center">
 
+[English](README.md) · [中文](README.zh.md) · [Русский](README.ru.md)
+
 ![scratrace](assets/scratrace.png)
 
 # scratrace
 
-**OSINT-инструмент для поиска людей по username, e-mail, телефону и полному имени.**
+**An OSINT tool to find people by username, e-mail, phone number, and full name.**
 
-Чистые ссылки. Ноль ложных срабатываний. Красивый интерфейс. Мультиязычность.
+Clean links. Zero false positives. A beautiful interface. Multilingual.
 
-[![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
@@ -16,91 +18,92 @@
 
 ---
 
-## 🔍 Что это
+## 🔍 What is it
 
-`scratrace` — консольный OSINT-сканер, который пробегается по каталогу сайтов и
-находит профили пользователя по заданному идентификатору. В отличие от большинства
-аналогов, мы **не выдаём найденное наобум**: каждая ссылка в каталоге проверена на
-честность, а «врущие» сайты помечаются и отбрасываются.
+`scratrace` is a console OSINT scanner that walks through a catalog of sites and
+finds user profiles by a given identifier. Unlike most alternatives, we **never
+report a hit at random**: every link in the catalog is verified for honesty, and
+sites that lie are flagged and dropped.
 
-### Поддерживаемые типы поиска
+### Supported search types
 
-| Тип                | Описание                                            |
-| ------------------ | --------------------------------------------------- |
-| 🧑 `username`      | Поиск по никнейму across соцсетей, форумов, dev и т.д. |
-| 📧 `email`         | Поиск по e-mail                                      |
-| 📱 `number_phone`  | Поиск по номеру телефона                            |
-| 👤 `full_name`     | Поиск по имени и фамилии                            |
+| Type               | Description                                          |
+| ------------------ | ---------------------------------------------------- |
+| 🧑 `username`      | Search by nickname across socials, forums, dev, etc. |
+| 📧 `email`         | Search by e-mail                                      |
+| 📱 `number_phone`  | Search by phone number                               |
+| 👤 `full_name`     | Search by first and last name                        |
 
 ---
 
-## ⚡ Наши преимущества
+## ⚡ Our advantages
 
-> Почему `scratrace`, а не очередной форк `sherlock`?
+> Why `scratrace` instead of yet another `sherlock` fork?
 
-### 1. Чистые ссылки без ложных срабатываний
+### 1. Clean links with no false positives
 
-Большинство OSINT-тулок (включая популярные) считают сайт «найденным», если он
-вернул **любой** ответ, даже `404` или страницу «пользователь не существует».
-Мы проверяем каждый сайт двойным запросом:
+Most OSINT tools (including popular ones) consider a site "found" if it returns
+**any** response — even a `404` or a "user does not exist" page. We verify every
+site with a double request:
 
-- подставляем **популярный** username (`news`, `user`, `admin`);
-- подставляем **заведомо случайный** `kljwwdlkjadkljakdl`.
+- we substitute a **popular** username (`news`, `user`, `admin`);
+- we substitute a **deliberately random** `kljwwdlkjadkljakdl`.
 
-Если коды ответов **совпадают** — сайт врёт (всегда отдаёт `200`) → `type_url=None`,
-ссылка не считается рабочей. Если коды **различаются** — сайт честный → проставляем
-реальный код (`type_url=200`) и только тогда используем.
+If the response codes **match** — the site lies (always returns `200`) →
+`type_url=None`, the link is not considered working. If the codes **differ** — the
+site is honest → we record the real code (`type_url=200`) and only then use it.
 
 ```
 username=news      → 200
-username=kljwwd... → 404   ✅ честный, type_url=200
+username=kljwwd... → 404   ✅ honest, type_url=200
 
 username=news      → 200
-username=kljwwd... → 200   ❌ врёт, type_url=None (отброшено)
+username=kljwwd... → 200   ❌ lies, type_url=None (dropped)
 ```
 
-Каталог пока не самый большой, но **каждая ссылка в нём актуальна и проверена**.
+The catalog isn't the largest yet, but **every link in it is current and verified**.
 
-### 2. Красивый и дружелюбный интерфейс
+### 2. A beautiful, friendly interface
 
-Градиентное меню, живой прогресс-бар с процентом и растущей лентой результатов,
-категории с акцентными цветами. Всё построено на [`rich`](https://github.com/Textualize/rich).
+A gradient menu, a live progress bar with a percentage and a growing results feed,
+categories with accent colors. Everything is built on
+[`rich`](https://github.com/Textualize/rich).
 
 <div align="center">
 
-![Так выглядит scratrace в терминале](assets/terminal.png)
+![How scratrace looks in the terminal](assets/terminal.png)
 
 </div>
 
-### 3. Переводы на разные языки
+### 3. Translations into multiple languages
 
-Встроенная система i18n. Сейчас поддерживаются:
+A built-in i18n system. Currently supported:
 
-| Язык      | Код |
-| --------- | --- |
+| Language   | Code |
+| ---------- | ---- |
 | 🇷🇺 Русский | `ru` |
 | 🇬🇧 English | `en` |
 | 🇨🇳 中文    | `cn` |
 
-Переключается в меню **Settings** → выбор языка.
+Switch via the **Settings** menu → choose language.
 
 ---
 
-## 🚀 Установка
+## 🚀 Installation
 
-Самый быстрый способ — поставить прямо из GitHub:
+The fastest way is to install straight from GitHub:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
 ```
 
-Или конкретную версию по тегу:
+Or a specific tagged version:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git@v0.1.0
 ```
 
-Для разработки (editable-режим):
+For development (editable mode):
 
 ```bash
 git clone https://github.com/0xScodyx/scratrace.git
@@ -108,18 +111,18 @@ cd scratrace
 pip install -e .
 ```
 
-Зависимости: `aiohttp`, `rich`, `pytest`, `pytest-xdist`.
+Dependencies: `aiohttp`, `rich`, `pytest`, `pytest-xdist`.
 
-## 💻 Использование
+## 💻 Usage
 
 ```bash
-pyscratrace          # интерактивное меню
+pyscratrace          # interactive menu
 ```
 
-В меню выбери тип поиска (`username` / `email` / `phone` / `full_name`),
-введи значение — и смотри живой прогресс. По завершении нажми `Enter`.
+Pick a search type (`username` / `email` / `phone` / `full_name`), enter a value,
+and watch the live progress. Press `Enter` when done.
 
-### Программный вызов
+### Programmatic use
 
 ```python
 from scratrace.osint import UserName
@@ -130,52 +133,52 @@ results = UserName("scodyx").check_all()
 
 ---
 
-## 🧪 Тестирование и очистка каталога
+## 🧪 Testing and catalog cleanup
 
-Мёртвые сайты выявляются через `pytest` и автоматически вырезаются:
+Dead sites are detected via `pytest` and automatically pruned:
 
 ```bash
-pytest tests/test_sites.py -n auto     # пишет мертвецов в .dead_sites.json
-python tests/cut_sites.py              # удаляет их из sites.py
+pytest tests/test_sites.py -n auto     # writes dead sites to .dead_sites.json
+python tests/cut_sites.py              # removes them from sites.py
 ```
 
 ---
 
-## 🗂 Структура
+## 🗂 Structure
 
 ```
 src/scratrace/
-├── app.py            # интерактивное меню (rich)
-├── ui.py             # градиенты, таблицы, прогресс
+├── app.py            # interactive menu (rich)
+├── ui.py             # gradients, tables, progress
 ├── i18n.py / lang.json
 ├── banner.py
 └── osint/
-    ├── sites.py      # реестр сайтов (Sites-объекты)
-    ├── username.py   # проверка по username
+    ├── sites.py      # site registry (Sites objects)
+    ├── username.py   # username check
     ├── email.py
     ├── number_phone.py
     └── full_name.py
 tests/
-├── test_sites.py     # reachability-проверка (не трогать!)
-├── conftest.py       # сбор мертвых сайтов
-└── cut_sites.py      # авто-удаление
+├── test_sites.py     # reachability check (do not touch!)
+├── conftest.py       # dead-site collection
+└── cut_sites.py      # auto-removal
 ```
 
 ---
 
-## 👥 Контрибьютеры
+## 👥 Contributors
 
-Спасибо всем, кто делает `scratrace` чище и точнее:
+Thanks to everyone making `scratrace` cleaner and more accurate:
 
-<!-- contrib.rocks: аватарки всех контрибьютеров подтягиваются с GitHub API автоматически -->
+<!-- contrib.rocks: contributor avatars are pulled from the GitHub API automatically -->
 <a href="https://github.com/0xScodyx/scratrace/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=0xScodyx/scratrace" />
 </a>
 
-> Хочешь попасть сюда? Добавь сайт в `sites.py` или улучши проверку — PR welcome!
+> Want to show up here? Add a site to `sites.py` or improve the check — PRs welcome!
 
 ---
 
-## 📜 Лицензия
+## 📜 License
 
 MIT © scratrace contributors
