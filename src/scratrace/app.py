@@ -7,6 +7,12 @@ from .i18n import I18n
 from .settings import Settings
 from . import ui
 from .osint import UserName
+import threading
+import time
+
+from rich.console import Group
+from rich.live import Live
+
 
 
 # title_key -> (build UserName-like checker, run it).
@@ -177,11 +183,6 @@ class SearchScreen(Menu):
             ui.pause(self.i18n.t("press_continue"))
             return
 
-        import threading
-        import time
-
-        from rich.console import Group
-        from rich.live import Live
 
         checker = UserName(value)
         total = len(checker.targets())
@@ -247,8 +248,6 @@ class SearchScreen(Menu):
         print_banner()
         ui.render(build_table())
         ui.pause(self.i18n.t("press_continue"))
-        #     ui.render(build_table())
-        # ui.pause(self.i18n.t("press_continue"))
 
 
 class SettingsMenu(Menu):
