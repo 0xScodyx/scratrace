@@ -24,7 +24,7 @@ import pytest
 
 from scratrace.osint.sites import CATEGORIES, Redirect, SiteRegistry, Sites
 
-_DB_PATH = Path(__file__).resolve().parent.parent / "src" / "scratrace" / "osint" / "SiteRegistry.db"
+from scratrace.osint.sites import _DB_PATH
 _SCHEMA_PATH = Path(__file__).resolve().parent.parent / "src" / "scratrace" / "osint" / "SiteRegistry.schema.sql"
 
 _TIMEOUT = 8
