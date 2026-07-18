@@ -15,16 +15,17 @@ import asyncio
 
 import aiohttp
 
-from scratrace.osint.sites import SiteRegistry
+from scratrace.osint.sites import Redirect, SiteRegistry
 
-CATS = [
-    "SOCIAL", "FORUMS", "BLOGS", "GAMING", "DEV", "CREATIVE",
-    "MISC", "PROFESSIONAL", "PEOPLE_SEARCH", "LINKS",
+from urllib.parse import urlparse
+
+CAT_LOWER = [
+    "social", "forums", "blogs", "gaming", "dev", "creative",
+    "misc", "professional", "people_search", "links",
 ]
-CAT_LOWER = [c.lower() for c in CATS]
 
 CONCURRENCY = 80
-TIMEOUT = 4
+TIMEOUT = 10
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
 
@@ -47,26 +48,64 @@ class UserName:
             return obj.info["placeholder"].replace("{placeholder}", "{username}")
         return None
 
+    @staticmethod
+    def _hit_redirect(r: Redirect, status: int, final_url: str, text: str, username: str) -> bool:
+        """Redirect decision.
+
+        Fact of redirect onto the probe URL is the base signal; type_url_probe
+        (if given) refines the decision by status code or HTML substring.
+        """
+
+        base = r.probe.replace("{username}", "")
+        sp = urlparse(base)
+        fp = urlparse(final_url)
+        sh = sp.netloc.lower().replace("www.", "")
+        fh = fp.netloc.lower().replace("www.", "")
+        if not sh or sh != fh:
+            return False
+        spp = sp.path.rstrip("/")
+        fpp = fp.path.rstrip("/")
+        if not (fpp == spp or fpp.startswith(spp + "/")):
+            return False
+
+        # redirected onto probe
+        if r.type_url_probe is None:
+            return True
+        # refine: status code or HTML substring (str supports {username})
+        tu = r.type_url_probe
+        if isinstance(tu, int):
+            return status == tu
+        if isinstance(tu, list):
+            for x in tu:
+                if isinstance(x, int):
+                    if status == x:
+                        return True
+                elif isinstance(x, str) and x.replace("{username}", username) in text:
+                    return True
+            return False
+        if isinstance(tu, str):
+            return tu.replace("{username}", username) in text
+        return False
+
     def _targets(self, kind: str) -> dict[str, list[tuple[str, str, object]]]:
         """Return {category: [(domain, url_template, payload)]} for a check kind."""
         out: dict[str, list[tuple[str, str, object]]] = {c: [] for c in CAT_LOWER}
-        for cat in CATS:
-            key = cat.lower()
-            for dom, obj in getattr(self.reg, cat).items():
-                t = obj.type
+        # SiteRegistry.categories is {lower_name: {host: Sites}} backed by the DB.
+        cats = self.reg.categories
+        for cat in CAT_LOWER:
+            for dom, obj in cats.get(cat, {}).items():
+                t = obj.type_url
                 if kind == "code" and isinstance(t, list) and t and not isinstance(t[0], str):
                     tmpl = self._template(obj)
                     if tmpl:
-                        out[key].append((dom, tmpl, t))
-                elif kind == "html" and isinstance(t, list) and t and isinstance(t[0], str):
+                        out[cat].append((dom, tmpl, t))
+                elif kind == "html" and (isinstance(t, str) or (isinstance(t, list) and t and isinstance(t[0], str))):
                     tmpl = self._template(obj)
                     if tmpl:
-                        out[key].append((dom, tmpl, t))
-                elif kind == "redirect":
-                    if obj.info and ("error" in obj.info or "probe" in obj.info):
-                        tmpl = obj.info.get("probe") or self._template(obj)
-                        if tmpl:
-                            out[key].append((dom, tmpl, obj))
+                        # pass the whole Sites object so reverse_condition survives
+                        out[cat].append((dom, tmpl, obj))
+                elif kind == "redirect" and isinstance(t, Redirect):
+                    out[cat].append((dom, t.probe, obj))
         return out
 
     async def _fetch(self, session, url):
@@ -76,7 +115,7 @@ class UserName:
                 headers=HEADERS, allow_redirects=True,
             ) as resp:
                 return resp.status, str(resp.url), await resp.text(errors="replace")
-        except Exception:
+        except (aiohttp.ClientError, asyncio.TimeoutError):
             return -1, url, ""
 
     async def _collect(self, kind: str) -> dict[str, list[str]]:
@@ -92,19 +131,16 @@ class UserName:
             if kind == "code":
                 hit = status in payload
             elif kind == "html":
-                hit = bool(text) and any(s in text for s in payload)
+                marker = payload.type_url
+                subs = marker if isinstance(marker, list) else [marker]
+                hit = bool(text) and any(s in text for s in subs)
             elif kind == "redirect":
                 if status < 0:
                     hit = False
-                elif payload.info and payload.info.get("error"):
-                    err = payload.info["error"]
-                    from urllib.parse import urlparse
-                    eh = urlparse(err).netloc.lower().replace("www.", "")
-                    ep = urlparse(err).path.rstrip("/")
-                    fp = urlparse(final_url).path.rstrip("/")
-                    hit = not (eh and eh in final_url and (fp == ep or not ep))
                 else:
-                    hit = 200 <= status < 300
+                    hit = UserName._hit_redirect(payload.type_url, status, final_url, text, self.username)
+            if getattr(payload, "reverse_condition", False):
+                hit = not hit
             if hit:
                 result[cat].append(url)
 
@@ -186,19 +222,16 @@ class UserName:
         if kind == "code":
             hit = status in payload
         elif kind == "html":
-            hit = bool(text) and any(s in text for s in payload)
+            marker = payload.type_url
+            subs = marker if isinstance(marker, list) else [marker]
+            hit = bool(text) and any(s in text for s in subs)
         else:  # redirect
             if status < 0:
                 hit = False
-            elif payload.info and payload.info.get("error"):
-                err = payload.info["error"]
-                from urllib.parse import urlparse
-                eh = urlparse(err).netloc.lower().replace("www.", "")
-                ep = urlparse(err).path.rstrip("/")
-                fp = urlparse(final_url).path.rstrip("/")
-                hit = not (eh and eh in final_url and (fp == ep or not ep))
             else:
-                hit = 200 <= status < 300
+                hit = UserName._hit_redirect(payload.type_url, status, final_url, text, self.username)
+        if getattr(payload, "reverse_condition", False):
+            hit = not hit
         return url if hit else None
 
     def check_username_sites(self, on_progress=None) -> dict[str, list[str]]:
