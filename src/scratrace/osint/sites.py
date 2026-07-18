@@ -33,7 +33,7 @@ class Sites:
 
 # SQLite-backed catalog. Data lives in SiteRegistry.db (see SiteRegistry.schema.sql).
 # Each category is a STRICT table; link is UNIQUE, type_url/info are TEXT (JSON or NULL).
-_DB_PATH = Path(__file__).parent / "SiteRegistry.db"
+_DB_PATH = Path(__file__).resolve().parent / "SiteRegistry.db"
 
 CATEGORIES = [
     "SOCIAL", "FORUMS", "BLOGS", "GAMING", "DEV",
