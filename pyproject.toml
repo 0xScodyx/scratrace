@@ -29,7 +29,7 @@ pyscratrace = "scratrace.app:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-scratrace = ["banner", "lang.json"]
+scratrace = ["banner", "lang.json", "osint/SiteRegistry.db"]
 
 [tool.pytest.ini_options]
 addopts = "-q -s -n auto"
