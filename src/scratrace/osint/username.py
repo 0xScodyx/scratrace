@@ -129,6 +129,8 @@ class UserName:
                 status, final_url, text = await self._fetch(session, url)
             hit = False
             if kind == "code":
+                if isinstance(payload, int):
+                    payload = [payload]
                 hit = status in payload
             elif kind == "html":
                 marker = payload.type_url
