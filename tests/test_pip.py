@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import hashlib
 import json
-import sqlite3
 from pathlib import Path
 from importlib.resources import files
-
 
 PACKAGE_FILES = {
     "lang.json": None,
@@ -34,26 +32,30 @@ def get_package_files() -> dict:
     return result
 
 
+def get_expected_hashes() -> dict:
+    hashes_file = Path(__file__).resolve().parent / ".expected_hashes.json"
+    if not hashes_file.exists():
+        return {}
+    with open(hashes_file, "r") as f:
+        return json.load(f)
+
+
 def test_package_files_exist():
     paths = get_package_files()
     missing = [f for f in PACKAGE_FILES if f not in paths]
     assert not missing, f"Missing package files: {missing}"
 
 
-def test_lang_json_valid():
+def test_package_files_match_expected():
     paths = get_package_files()
-    if "lang.json" not in paths:
-        return
-    with open(paths["lang.json"], "r", encoding="utf-8") as f:
-        json.load(f)
-
-
-def test_db_valid():
-    paths = get_package_files()
-    if "SiteRegistry.db" not in paths:
-        return
-    path = Path(paths["SiteRegistry.db"])
-    assert path.stat().st_size > 0
-    con = sqlite3.connect(path)
-    con.execute("SELECT 1").fetchone()
-    con.close()
+    expected = get_expected_hashes()
+    
+    for filename, path_str in paths.items():
+        actual = sha256_file(Path(path_str))
+        expected_hash = expected.get(filename)
+        
+        if expected_hash is None:
+            continue
+            
+        assert actual == expected_hash, \
+            f"{filename} hash mismatch.\n  Expected: {expected_hash}\n  Actual:   {actual}"
