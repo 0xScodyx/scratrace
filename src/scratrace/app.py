@@ -9,6 +9,7 @@ from . import ui
 from .osint import UserName
 import threading
 import time
+from .redirect_db_convert import redirects_to_json_db
 
 from rich.console import Group
 from rich.live import Live
@@ -305,4 +306,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    redirects_to_json_db()
     main()
