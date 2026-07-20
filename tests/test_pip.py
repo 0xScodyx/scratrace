@@ -8,7 +8,8 @@ from importlib.resources import files
 
 PACKAGE_FILES = {
     "lang.json": None,
-    "SiteRegistry.db": None,
+    "osint/SiteRegistry.db": None,
+    "banner": None
 }
 
 
