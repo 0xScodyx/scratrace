@@ -5,7 +5,7 @@ from pathlib import Path
 
 from scratrace.osint.sites import _DB_PATH
 
-def migrate_redirects_to_json():
+def redirects_to_json_db():
     con = sqlite3.connect(_DB_PATH)
     cur = con.cursor()
     
@@ -46,4 +46,4 @@ def migrate_redirects_to_json():
     con.close()
 
 if __name__ == "__main__":
-    migrate_redirects_to_json()
+    redirects_to_json_db()
