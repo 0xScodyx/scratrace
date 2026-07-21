@@ -30,9 +30,9 @@ sites that lie are flagged and dropped.
 | Type               | Description                                          |
 | ------------------ | ---------------------------------------------------- |
 | 🧑 `username`      | Search by nickname across socials, forums, dev, etc. |
-| 📧 `email`         | Search by e-mail                                      |
-| 📱 `number_phone`  | Search by phone number                               |
-| 👤 `full_name`     | Search by first and last name                        |
+| 📧 `email`         | Search by e-mail · _coming soon_                       |
+| 📱 `number_phone`  | Search by phone number · _coming soon_                |
+| 👤 `full_name`     | Search by first and last name · _coming soon_         |
 
 ---
 
