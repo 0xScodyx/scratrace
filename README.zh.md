@@ -8,7 +8,7 @@
 
 **一款通过用户名、电子邮件、电话号码和全名查找人物的 OSINT 工具。**
 
-链接干净。零误报。界面精美。多语言支持。
+链接干净。Playwright 驱动。内置 DuckDuckGo 搜索。多语言支持。
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -37,31 +37,28 @@
 
 ## ⚡ 我们的优势
 
-> 为什么选择 `scratrace`，而不是又一个 `sherlock` 分叉？
+> 受 [Maigret](https://github.com/soxoj/maigret) 启发——拥有 3000+ 站点和双重验证机制的成熟 OSINT 工具。
+> 我们目标相同，但选择了不同的技术路径。
 
-### 1. 干净的链接，没有误报
+### 1. SQLite 替代 JSON——更轻量、有类型
 
-大多数 OSINT 工具（包括热门工具）只要站点返回**任何**响应就认为「找到了」——
-哪怕是 `404` 或「用户不存在」页面。我们通过双重请求验证每个站点：
+Maigret 的 3200+ 站点存在 **4.4 万行的 JSON 文件**（`~/.maigret/data.json`，1.4MB）中。
+没有 schema，全量加载到内存，diff 巨大，无法索引。
 
-- 代入一个**常见**用户名（`news`、`user`、`admin`）；
-- 代入一个**故意随机**的 `kljwwdlkjadkljakdl`。
+我们使用 **SQLite**（`SiteRegistry.db`，536KB）。列有类型（`int`、`str`、`JSON`、`bool`），
+支持 `SELECT`、`UPDATE`、`DELETE`，数据库再大也保持快速。
 
-如果响应码**相同**——说明站点在撒谎（总是返回 `200`）→ `type_url=None`，
-该链接不算可用。如果响应码**不同**——说明站点诚实 → 记录真实响应码
-（`type_url=200`），然后才使用它。
+### 2. Playwright 处理 SPA 和反爬站点
 
-```
-username=news      → 200
-username=kljwwd... → 404   ✅ 诚实，type_url=200
+Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
+我们通过 Playwright 运行**真实浏览器脚本**，支持 TikTok、Replit、Weebly、Wix、Fiverr 等。
 
-username=news      → 200
-username=kljwwd... → 200   ❌ 撒谎，type_url=None（已剔除）
-```
+### 3. 内置 DuckDuckGo 搜索
 
-目录目前还不算最大，但**其中每个链接都是最新且经过验证的**。
+除了站点目录，还会自动在 DuckDuckGo 搜索用户名，在「Other Info」类别中展示网络上的公开信息。
+无需 API 密钥，无需验证码。
 
-### 2. 精美、友好的界面
+### 4. 精美、友好的界面
 
 渐变菜单、带百分比和实时结果列表的进度条、带强调色的分类。全部基于
 [`rich`](https://github.com/Textualize/rich) 构建。
@@ -72,7 +69,7 @@ username=kljwwd... → 200   ❌ 撒谎，type_url=None（已剔除）
 
 </div>
 
-### 3. 多语言翻译
+### 5. 多语言翻译
 
 内置 i18n 系统。目前支持：
 
@@ -84,7 +81,10 @@ username=kljwwd... → 200   ❌ 撒谎，type_url=None（已剔除）
 
 在 **Settings** 菜单中切换 → 选择语言。
 
----
+### 6. 自动清理失效站点
+
+定期运行 `pytest` 可检测失效和「撒谎」站点并自动从目录中移除。
+数据库无需人工维护即可保持准确。
 
 ## 🚀 安装
 

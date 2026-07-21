@@ -8,7 +8,7 @@
 
 **An OSINT tool to find people by username, e-mail, phone number, and full name.**
 
-Clean links. Zero false positives. A beautiful interface. Multilingual.
+Clean links. Playwright-powered. DuckDuckGo dorking built in. Multilingual.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -38,57 +38,34 @@ sites that lie are flagged and dropped.
 
 ## ⚡ Why scratrace?
 
-> [Maigret](https://github.com/soxoj/maigret) has a massive catalog of 3000+ sites.
-> scratrace is a different take — smaller catalog, but every site is manually verified,
-> with Playwright for SPA sites, built-in DuckDuckGo dorking, and a rich UI.
-> We were inspired by Maigret's approach and give credit where it's due.
+> Inspired by [Maigret](https://github.com/soxoj/maigret) — a mature OSINT tool with
+> 3000+ sites and a clever double-check mechanism (claimed vs unclaimed username).
+> We share the same goal but took a different path.
 
-### 1. Zero false positives — guaranteed
+### 1. SQLite instead of JSON — lean & typed
 
-Most OSINT tools (including Maigret and Sherlock forks) consider a site "found"
-if it returns **any** HTTP 200, even a "user not found" page rendered as a
-positive response. We don't.
+Maigret stores its 3200+ sites in a **44k-line JSON file** (`~/.maigret/data.json`, 1.4MB).
+That works, but:
 
-Every site in our catalog goes through a **double request**:
+- no schema — every field is a string, no validation
+- the entire JSON must be loaded into memory at once
+- diffs are massive even for tiny changes
+- no indexing — finding a site means scanning the whole dict
 
-- we request a **known-popular** username (`news`, `admin`, `user`);
-- we request a **deliberately random** one (`kljwwdlkjadkljakdl`).
-
-If both return the same code — the site lies → we drop it (`type_url=None`).
-If they differ — the site is honest → we record the real detection code.
-
-```
-news      → 200
-kljwwd…   → 404   ✅ honest, type_url=200
-
-news      → 200
-kljwwd…   → 200   ❌ lying, dropped
-```
-
-**Every link in the result is a real profile — not a guess.**
-
-```
-news      → 200
-kljwwd…   → 404   ✅ honest, type_url=200
-
-news      → 200
-kljwwd…   → 200   ❌ lying, dropped
-```
-
-**Every link in the result is a real profile — not a guess.**
+We use **SQLite** (`SiteRegistry.db`, 536KB). Every column is typed
+(`int`, `str`, `JSON`, `bool`), we can `SELECT`, `UPDATE`, `DELETE` with precision,
+and the DB stays fast regardless of size.
 
 ### 2. Playwright for SPA & antibot sites
 
-Maigret and Sherlock rely on raw HTTP and miss anything that requires JavaScript.
+Maigret relies on raw HTTP and misses anything that requires JavaScript.
 We run **real browser scripts** via Playwright for TikTok, Replit, Weebly,
-Wix, Fiverr, LiveJournal and more — sites that hide their content behind
-login walls, SPAs, or antibot checks.
+Wix, Fiverr, LiveJournal and more.
 
 ### 3. DuckDuckGo dorking built in
 
 Beyond the site catalog, we automatically run a **DuckDuckGo search** for the
-username and show fresh results from the web under "Other Info". No API key
-needed, no captcha — powered by `ddgs`.
+username and show fresh web results under "Other Info". No API key, no captcha.
 
 ### 4. Beautiful, friendly interface
 
@@ -111,10 +88,10 @@ Built-in i18n. Switch languages on the fly in Settings:
 | 🇬🇧 English | `en` |
 | 🇨🇳 中文    | `cn` |
 
-### 6. Always fresh — dead sites get pruned
+### 6. Always fresh — dead sites get pruned automatically
 
-A periodic `pytest` run detects dead and lying sites and removes them from the
-catalog automatically. The database stays honest without manual effort.
+A regular `pytest` run catches dead and lying sites and removes them from the
+catalog. The database stays honest without manual effort.
 
 ---
 
