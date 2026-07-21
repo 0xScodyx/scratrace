@@ -14,21 +14,45 @@ from typing import Callable
 
 @dataclass
 class Redirect:
-    probe: str = ""
-    type_url_probe: str | list[str] | int | list[int] | None = None
+    # Сложный маркер: проверяем ФАКТ редиректа (final_url ушёл с точки входа
+    # из info) + куда именно кинуло (final_url) + опционально маркер
+    # (html/код) уже на финальной странице. Точка входа берётся из info,
+    # дублировать её сюда не надо.
+    final_url: str = ""   # куда сайт редиректит (шаблон/подстрока)
+    marker: str | list[str] | int | list[int] | None = None  # html/код финальной страницы
+
+
+# Спец-маркер: страница сложная (SPA/antibot/login-wall), детект — через
+# playwright-скрипт из pw_scripts. Имя скрипта = link сайта, класс OSINT
+# резолвится по info-ключу (INFO_KEY_TO_CLASS). Аргументы не нужны.
+PLAYWRIGHT = -999
 
 
 @dataclass
 class Sites:
-    # info keys:
+    # info — ТОЧКА ВХОДА: куда отправить запрос.
     #   "username" / "placeholder" / "number_phone" / "channel" - public URLs
-    #   "probe"  - technical endpoint for the check (data.json urlProbe)
-    #   "error"  - URL site redirects to when username does NOT exist (errorUrl)
-    # type_url: int (HTTP code) | str (HTML substring) | None (dynamic)
+    # type_url — МАРКЕР (тип определяется самим значением):
+    #   int / list[int]  -> code (HTTP-код)
+    #   str / list[str]  -> html (подстрока в теле)
+    #   Redirect(...)    -> сложный маркер (редирект + final_url + маркер)
+    #   PLAYWRIGHT (-999)-> сложная страница, скрипт из pw_scripts по link
     # reverse_condition: invert the hit decision (e.g. telegram: marker present => ABSENT)
     info: dict | None = None
-    type_url: int | list[int] | str | list[str] | Callable | None = None
+    type_url: int | list[int] | str | list[str] | Redirect | None = None
     reverse_condition: bool = False
+
+
+# info-ключ сайта -> класс OSINT. Класс резолвится в рантайме по ключу info,
+# в type_url его дублировать не надо.
+INFO_KEY_TO_CLASS = {
+    "username": "UserName",
+    "placeholder": "UserName",
+    "email": "Mail",
+    "number_phone": "NumberPhone",
+    "channel": "NumberPhone",
+    "fullname": "FullName",
+}
 
 
 # SQLite-backed catalog. Data lives in SiteRegistry.db (see SiteRegistry.schema.sql).
@@ -74,20 +98,20 @@ class SiteRegistry:
 
     @staticmethod
     def _deserialize_type_url(cell):
-        """DB cell (ANY) -> Sites.type_url value (None / str / list / Redirect)."""
+        """DB cell (ANY) -> Sites.type_url value (None / int / str / list / Redirect)."""
         if cell is None:
             return None
-        # Redirect was stored as a JSON string; list/str were stored verbatim.
+        # Redirect was stored as tagged JSON; int/list/str stored verbatim.
         if isinstance(cell, (bytes, str)):
             try:
                 raw = json.loads(cell)
             except (json.JSONDecodeError, TypeError):
                 return cell  # plain str marker, not JSON
             if isinstance(raw, dict) and raw.get("__redirect__"):
-                return Redirect(probe=raw.get("probe", ""),
-                                type_url_probe=raw.get("type_url_probe"))
-            return raw  # decoded list
-        return cell  # already a list (stored natively by ANY)
+                return Redirect(final_url=raw.get("final_url", ""),
+                                marker=raw.get("marker"))
+            return raw  # decoded int / list
+        return cell  # already int/list (stored natively by ANY)
 
     @staticmethod
     def _deserialize_info(cell: str | None) -> dict | None:

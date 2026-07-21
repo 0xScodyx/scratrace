@@ -41,6 +41,7 @@ _CATEGORY_KEYS = {
     "professional": "category_professional",
     "people_search": "category_people_search",
     "links": "category_links",
+    "other_info": "category_other_info",
 }
 
 # Control signals returned by menu loops.
@@ -302,7 +303,10 @@ def main() -> None:
     install_rich_traceback()
     settings = Settings()
     i18n = I18n(settings.language)
-    MainMenu(i18n, settings).run()
+    try:
+        MainMenu(i18n, settings).run()
+    except KeyboardInterrupt:
+        print("\nGoodBye")
 
 
 if __name__ == "__main__":

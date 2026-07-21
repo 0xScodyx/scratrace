@@ -83,6 +83,7 @@ CATEGORY_COLORS = {
     "professional": "#14A5F0",
     "people_search": "#0AB9E0",
     "links": "#3AA0D8",
+    "other_info": "#FFB347",
 }
 
 

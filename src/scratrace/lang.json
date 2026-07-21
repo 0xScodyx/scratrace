@@ -49,7 +49,8 @@
     "faq_text": "scratrace — это OSINT инструмент с интерактивным меню. Здесь появится подробная справка.",
     "press_enter": "Нажмите Enter чтобы вернуться",
     "press_continue": "Нажмите Enter чтобы продолжить",
-    "goodbye": "До свидания!"
+    "goodbye": "До свидания!",
+    "category_other_info": "Other Info"
   },
   "en": {
     "banner_title": "SCRATRACE",
@@ -101,7 +102,8 @@
     "faq_text": "scratrace is an OSINT tool with an interactive menu. Detailed help will appear here.",
     "press_enter": "Press Enter to go back",
     "press_continue": "Press Enter to continue",
-    "goodbye": "Goodbye!"
+    "goodbye": "Goodbye!",
+    "category_other_info": "Other Info"
   },
   "cn": {
     "banner_title": "SCRATRACE",
@@ -153,6 +155,7 @@
     "faq_text": "scratrace 是一个带有交互式菜单的 OSINT 工具。详细帮助将显示在此处。",
     "press_enter": "按 Enter 返回",
     "press_continue": "按 Enter 继续",
-    "goodbye": "再见！"
+    "goodbye": "再见！",
+    "category_other_info": "Other Info"
   }
 }

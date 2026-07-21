@@ -230,3 +230,12 @@ extracted_links_full.txt
 links_by_site.txt
 links_only.txt
 script*.py
+
+# SQLite WAL / SHM
+*.db-shm
+*.db-wal
+
+# AI assistant artifacts
+.aider*
+.scriptres.py
+/SiteRegistry.db
