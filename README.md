@@ -98,19 +98,13 @@ catalog. The database stays honest without manual effort.
 
 ## 🚀 Installation
 
-### Install from PyPI
-
-```bash
-pip install scratrace
-```
-
-### Install from GitHub (latest)
+The fastest way is to install straight from GitHub:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
 ```
 
-A specific tagged version:
+Or a specific tagged version:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
@@ -118,7 +112,7 @@ pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
 
 ### Install Playwright browsers
 
-scratrace uses Playwright for browser-based checks and DuckDuckGo dorking.
+scratrace requires Playwright for browser-based checks and DuckDuckGo dorking.
 After installing the package, run:
 
 ```bash
@@ -126,9 +120,6 @@ playwright install chromium
 ```
 
 This downloads a Chromium browser (~150MB) to `~/.cache/ms-playwright`.
-
-> **Note:** `playwright install` is required. If you skip it, browser checks and
-> DuckDuckGo dorking will be skipped without crashing.
 
 ### Development (editable mode)
 
@@ -138,8 +129,6 @@ cd scratrace
 pip install -e .
 playwright install chromium
 ```
-
----
 
 ## 💻 Usage
 

@@ -53,10 +53,11 @@ Maigret 的 3200+ 站点存在 **4.4 万行的 JSON 文件**（`~/.maigret/data.
 Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
 我们通过 Playwright 运行**真实浏览器脚本**，支持 TikTok、Replit、Weebly、Wix、Fiverr 等。
 
-### 3. 内置搜索功能
+### 3. 内置搜索
 
 除了站点目录，还会自动通过 Playwright 在 DuckDuckGo 搜索用户名，
-在「Other Info」类别中展示网络上的公开信息。无需 API 密钥，无需验证码。
+在「Other Info」类别中展示网络上的公开信息。
+无需 API 密钥，无需验证码。
 
 ### 4. 精美、友好的界面
 
@@ -86,23 +87,15 @@ Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
 定期运行 `pytest` 可检测失效和「撒谎」站点并自动从目录中移除。
 数据库无需人工维护即可保持准确。
 
----
-
 ## 🚀 安装
 
-### 从 PyPI 安装
-
-```bash
-pip install scratrace
-```
-
-### 从 GitHub 安装（最新版）
+最快的方式是直接从 GitHub 安装：
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
 ```
 
-安装指定版本：
+或安装指定标签的版本：
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
@@ -110,17 +103,14 @@ pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
 
 ### 安装 Playwright 浏览器
 
-scratrace 使用 Playwright 进行浏览器检测和 DuckDuckGo 搜索。
-安装包后，运行：
+scratrace 需要 Playwright 进行浏览器检测和 DuckDuckGo 搜索。
+安装包后运行：
 
 ```bash
 playwright install chromium
 ```
 
-此命令会下载 Chromium 浏览器（约 150MB）到 `~/.cache/ms-playwright`。
-
-> **注意：** `playwright install` 是必须的。如果跳过此步骤，浏览器检测和
-> DuckDuckGo 搜索将被跳过（不会报错）。
+此命令下载 Chromium 浏览器（约 150MB）到 `~/.cache/ms-playwright`。
 
 ### 开发模式（可编辑安装）
 
@@ -130,8 +120,6 @@ cd scratrace
 pip install -e .
 playwright install chromium
 ```
-
----
 
 ## 💻 使用
 
@@ -154,15 +142,18 @@ results = UserName("scodyx").check_all()
 ### 查看日志
 
 ```bash
-scratrace-log        # 显示最近的搜索日志
+scratrace-log        # 查看最新搜索日志
 ```
 
 ---
 
 ## 🧪 测试与目录清理
 
+失效站点通过 `pytest` 检测并自动清除：
+
 ```bash
-pytest tests/ -n auto       # 可达性 + OSINT 行为检查
+pytest tests/test_sites.py -n auto     # 将失效站点写入 .dead_sites.json
+python tests/cut_sites.py              # 从 sites.py 中删除它们
 ```
 
 ---
@@ -171,23 +162,20 @@ pytest tests/ -n auto       # 可达性 + OSINT 行为检查
 
 ```
 src/scratrace/
-├── app.py               # 交互式菜单 (rich)
-├── ui.py                # 渐变、表格、进度
-├── i18n.py / lang.json  # 翻译
+├── app.py            # 交互式菜单 (rich)
+├── ui.py             # 渐变、表格、进度
+├── i18n.py / lang.json
 ├── banner.py
-├── log_view.py          # CLI 日志查看器
 └── osint/
-    ├── sites.py         # 站点注册表 (SQLite)
-    ├── username.py      # 用户名检查（所有策略）
-    ├── pw_scripts.py    # Playwright 检测和搜索脚本
-    ├── log.py           # ANSI 彩色日志
+    ├── sites.py      # 站点注册表 (Sites 对象)
+    ├── username.py   # 用户名检查
     ├── email.py
     ├── number_phone.py
     └── full_name.py
 tests/
-├── test_sites.py        # 可达性检查（请勿改动！）
-├── test_username.py     # OSINT 行为检查
-└── conftest.py
+├── test_sites.py     # 可达性检查（请勿改动！）
+├── conftest.py       # 失效站点收集
+└── cut_sites.py      # 自动删除
 ```
 
 ---

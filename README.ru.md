@@ -64,8 +64,8 @@ Replit, Weebly, Wix, Fiverr, LiveJournal и других.
 
 ### 3. Встроенный доркинг
 
-Помимо каталога сайтов, автоматически ищем username в DuckDuckGo через Playwright
-и показываем свежие результаты в категории «Other Info».
+Помимо каталога сайтов, автоматически ищем username через DuckDuckGo
+(Playwright) и показываем свежие результаты в категории «Other Info».
 Никаких API-ключей и капч.
 
 ### 4. Красивый и дружелюбный интерфейс
@@ -100,19 +100,13 @@ Replit, Weebly, Wix, Fiverr, LiveJournal и других.
 
 ## 🚀 Установка
 
-### Установка из PyPI
-
-```bash
-pip install scratrace
-```
-
-### Установка из GitHub (последняя версия)
+Самый быстрый способ — поставить прямо из GitHub:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
 ```
 
-Конкретная версия по тегу:
+Или конкретную версию по тегу:
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
@@ -120,7 +114,7 @@ pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
 
 ### Установка браузеров Playwright
 
-scratrace использует Playwright для браузерных проверок и доркинга DuckDuckGo.
+scratrace требует Playwright для браузерных проверок и доркинга DuckDuckGo.
 После установки пакета выполни:
 
 ```bash
@@ -128,9 +122,6 @@ playwright install chromium
 ```
 
 Эта команда скачает Chromium (~150MB) в `~/.cache/ms-playwright`.
-
-> **Важно:** `playwright install` обязателен. Если пропустить этот шаг, браузерные
-> проверки и DuckDuckGo-доркинг будут пропущены (без ошибок).
 
 ### Разработка (editable-режим)
 
@@ -140,8 +131,6 @@ cd scratrace
 pip install -e .
 playwright install chromium
 ```
-
----
 
 ## 💻 Использование
 
@@ -164,7 +153,7 @@ results = UserName("scodyx").check_all()
 ### Просмотр логов
 
 ```bash
-scratrace-log        # показать последний лог поиска
+scratrace-log        # хвост последнего поиска
 ```
 
 ---
