@@ -38,22 +38,24 @@ sites that lie are flagged and dropped.
 
 ## ⚡ Why scratrace?
 
-> The site database is built upon [Maigret's](https://github.com/soxoj/maigret) extensive catalog — the most comprehensive collection of OSINT-able sites. We took the best parts and made them faster, cleaner, and more reliable.
+> [Maigret](https://github.com/soxoj/maigret) has a massive catalog of 3000+ sites.
+> scratrace is a different take — smaller catalog, but every site is manually verified,
+> with Playwright for SPA sites, built-in DuckDuckGo dorking, and a rich UI.
+> We were inspired by Maigret's approach and give credit where it's due.
 
 ### 1. Zero false positives — guaranteed
 
 Most OSINT tools (including Maigret and Sherlock forks) consider a site "found"
-if it returns **any** HTTP response, even a generic `404` or a "user not found"
-page rendered as 200. We don't.
+if it returns **any** HTTP 200, even a "user not found" page rendered as a
+positive response. We don't.
 
-Every site in our catalog is verified with a **double request**:
+Every site in our catalog goes through a **double request**:
 
 - we request a **known-popular** username (`news`, `admin`, `user`);
 - we request a **deliberately random** one (`kljwwdlkjadkljakdl`).
 
-If both return the same code — the site lies (always returns 200) → we flag it as
-unreliable (`type_url=None`). If the codes differ — the site is honest → we record
-the real detection code and use it.
+If both return the same code — the site lies → we drop it (`type_url=None`).
+If they differ — the site is honest → we record the real detection code.
 
 ```
 news      → 200
