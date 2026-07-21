@@ -27,7 +27,16 @@ from __future__ import annotations
 from typing import Awaitable, Callable
 from urllib.parse import urlparse
 
-from playwright.async_api import Error as PwError, TimeoutError as PwTimeoutError
+class _PwError(Exception): ...
+class _PwTimeoutError(Exception): ...
+PwError: type[Exception] = _PwError
+PwTimeoutError: type[Exception] = _PwTimeoutError
+try:
+    from playwright.async_api import Error as _PwRealError, TimeoutError as _PwRealTimeout  # type: ignore[assignment]
+    PwError = _PwRealError  # type: ignore[assignment]
+    PwTimeoutError = _PwRealTimeout  # type: ignore[assignment]
+except ImportError:
+    pass
 
 # реестр: { "UserName": {name: fn}, "Mail": {...}, ... }
 _REGISTRY: dict[str, dict[str, Callable]] = {}

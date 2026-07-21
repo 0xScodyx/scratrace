@@ -22,8 +22,20 @@ from scratrace.osint.sites import Redirect, SiteRegistry, PLAYWRIGHT, INFO_KEY_T
 
 from urllib.parse import urlparse
 
-from playwright.async_api import async_playwright, TimeoutError as PwTimeoutError
-from playwright_stealth import Stealth
+try:
+    from playwright.async_api import async_playwright, TimeoutError as PwTimeoutError
+except ImportError:
+    async_playwright = None  # type: ignore[assignment]
+    class _PwTimeoutError(Exception): ...
+    PwTimeoutError: type[Exception] = _PwTimeoutError  # type: ignore[no-redef]
+else:
+    PwTimeoutError: type[Exception] = PwTimeoutError  # type: ignore[no-redef]
+
+try:
+    from playwright_stealth import Stealth
+except ImportError:
+    Stealth = None
+
 from scratrace.osint.pw_scripts import get_checker, get_dork_checker, _DORK_REGISTRY
 
 CAT_LOWER = [
@@ -257,7 +269,7 @@ class UserName:
             for cat, lst in targets.items()
             for (_, tmpl, payload) in lst
         ]
-        if not flat:
+        if not flat or async_playwright is None:
             return {c: [] for c in CAT_LOWER}
 
         async with async_playwright() as pw:
@@ -373,7 +385,7 @@ class UserName:
         async with aiohttp.ClientSession() as session:
             self._session = session
 
-            if dork_names:
+            if async_playwright is not None and dork_names:
                 async with async_playwright() as pw:
                     chromium = await pw.chromium.launch(
                         headless=False,
@@ -461,7 +473,8 @@ class UserName:
                     timezone_id="America/New_York",
                 )
                 page = await context.new_page()
-                await Stealth().apply_stealth_async(page)
+                if Stealth is not None:
+                    await Stealth().apply_stealth_async(page)
             for url, text in (await self._run_dork_check(page, name)).items():
                 text = "\n".join(f"    {l}" for l in text.split("\n"))
                 await on_result("other_info", f"[https://{url}]\n{text}")
