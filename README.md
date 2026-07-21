@@ -38,20 +38,32 @@ sites that lie are flagged and dropped.
 
 ## ⚡ Why scratrace?
 
-> We built upon the rich site database of [Maigret](https://github.com/soxoj/maigret) — the most comprehensive OSINT catalog out there. Then we made it faster, cleaner, and smarter.
+> The site database is built upon [Maigret's](https://github.com/soxoj/maigret) extensive catalog — the most comprehensive collection of OSINT-able sites. We took the best parts and made them faster, cleaner, and more reliable.
 
 ### 1. Zero false positives — guaranteed
 
-Most OSINT tools (including Maigret and Sherlock forks) report a hit if a server
-returns **any** HTTP 200, even a "user not found" page. We don't.
+Most OSINT tools (including Maigret and Sherlock forks) consider a site "found"
+if it returns **any** HTTP response, even a generic `404` or a "user not found"
+page rendered as 200. We don't.
 
-Every site in our catalog goes through a **double check**:
+Every site in our catalog is verified with a **double request**:
 
 - we request a **known-popular** username (`news`, `admin`, `user`);
 - we request a **deliberately random** one (`kljwwdlkjadkljakdl`).
 
-If both return the same code — the site lies → we drop it (`type_url=None`).
-If they differ — the site is honest → we record the real detection code.
+If both return the same code — the site lies (always returns 200) → we flag it as
+unreliable (`type_url=None`). If the codes differ — the site is honest → we record
+the real detection code and use it.
+
+```
+news      → 200
+kljwwd…   → 404   ✅ honest, type_url=200
+
+news      → 200
+kljwwd…   → 200   ❌ lying, dropped
+```
+
+**Every link in the result is a real profile — not a guess.**
 
 ```
 news      → 200
@@ -150,11 +162,8 @@ results = UserName("scodyx").check_all()
 
 ## 🧪 Testing and catalog cleanup
 
-Dead sites are detected via `pytest` and automatically pruned:
-
 ```bash
-pytest tests/test_sites.py -n auto     # writes dead sites to .dead_sites.json
-python tests/cut_sites.py              # removes them from sites.py
+pytest tests/ -n auto       # reachability + OSINT behavioural checks
 ```
 
 ---
@@ -163,20 +172,23 @@ python tests/cut_sites.py              # removes them from sites.py
 
 ```
 src/scratrace/
-├── app.py            # interactive menu (rich)
-├── ui.py             # gradients, tables, progress
-├── i18n.py / lang.json
+├── app.py               # interactive menu (rich)
+├── ui.py                # gradients, tables, progress
+├── i18n.py / lang.json  # translations
 ├── banner.py
+├── log_view.py          # CLI viewer for scratrace.log
 └── osint/
-    ├── sites.py      # site registry (Sites objects)
-    ├── username.py   # username check
+    ├── sites.py         # site registry + DB-backed catalog
+    ├── username.py      # username check (all strategies)
+    ├── pw_scripts.py    # Playwright profile & dork scripts
+    ├── log.py           # ANSI-colored logging
     ├── email.py
     ├── number_phone.py
     └── full_name.py
 tests/
-├── test_sites.py     # reachability check (do not touch!)
-├── conftest.py       # dead-site collection
-└── cut_sites.py      # auto-removal
+├── test_sites.py        # reachability (do not touch!)
+├── test_username.py     # OSINT behavioural checks
+└── conftest.py
 ```
 
 ---
