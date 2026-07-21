@@ -25,7 +25,9 @@
 from __future__ import annotations
 
 from typing import Awaitable, Callable
-from playwright.async_api import TimeoutError as PwTimeoutError
+from urllib.parse import urlparse
+
+from playwright.async_api import Error as PwError, TimeoutError as PwTimeoutError
 
 # реестр: { "UserName": {name: fn}, "Mail": {...}, ... }
 _REGISTRY: dict[str, dict[str, Callable]] = {}
@@ -311,23 +313,54 @@ async def fiverr(page, username: str) -> bool:
 # ====================================================================== #
 @browser.dork("duckduckgo")
 async def duckduckgo(page, username: str) -> dict[str, str]:
-    """Поиск username в DuckDuckGo через ddgs API.
-    page не используется (API-запрос, не браузер).
-    Возвращает {url: сниппет}. Дедупликация против других категорий."""
-    import asyncio
-    from ddgs import DDGS
+    """Поиск username в DuckDuckGo через Playwright.
+    Жмёт «More Results» пока кнопка есть, парсит все страницы.
+    Склеивает сниппеты по домену — {domain: весь_текст_про_домен}."""
+    domain_raw: dict[str, list[str]] = {}
+    seen_keys: dict[str, set[str]] = {}
+    seen_urls: set[str] = set()
+    if page is None:
+        return {}
+    query = f'"{username}"'
+    try:
+        await page.goto("https://duckduckgo.com/", wait_until="domcontentloaded", timeout=10_000)
+        await page.wait_for_selector("input[name='q']", timeout=5_000)
+        await page.fill("input[name='q']", query)
+        await page.keyboard.press("Enter")
+        await page.wait_for_selector("li[data-layout='organic']", timeout=10_000)
+    except PwTimeoutError:
+        return {}
 
-    def _search() -> list[dict]:
-        return DDGS().text(f'"{username}"', max_results=100)
-
-    rows = await asyncio.to_thread(_search)
-    results: dict[str, str] = {}
-    for r in rows:
-        href = r.get("href", "")
-        body = r.get("body", "")
-        if href and href.startswith("http"):
-            results[href] = body.strip()[:200]
-    return results
+    for _ in range(10):
+        items = await page.query_selector_all("li[data-layout='organic']")
+        for item in items:
+            links = await item.query_selector_all("a[href^='http']")
+            if not links:
+                continue
+            href = await links[0].get_attribute("href")
+            if not href or "duckduckgo.com" in href or href in seen_urls:
+                continue
+            seen_urls.add(href)
+            domain = (urlparse(href).hostname or href).removeprefix("www.")
+            raw = (await item.inner_text()).strip()
+            parts = raw.split("\n\n")
+            if len(parts) >= 3:
+                raw = "\n\n".join(parts[2:])
+            else:
+                raw = parts[-1] if len(parts) >= 2 else parts[0]
+            key = raw.strip()[:100]
+            if key not in seen_keys.setdefault(domain, set()):
+                seen_keys[domain].add(key)
+                domain_raw.setdefault(domain, []).append(raw)
+        more_btn = await page.query_selector("#more-results")
+        if not more_btn:
+            break
+        try:
+            await more_btn.click()
+        except PwError:
+            break
+        await page.wait_for_timeout(1_200)
+    return {d: "\n".join(v[:3]) for d, v in domain_raw.items()}
 
 
 # ====================================================================== #

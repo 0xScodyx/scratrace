@@ -8,7 +8,7 @@
 
 **OSINT-инструмент для поиска людей по username, e-mail, телефону и полному имени.**
 
-Чистые ссылки. Playwright. DuckDuckGo-доркинг. Мультиязычность.
+Чистые ссылки. Playwright. Мультиязычность.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)

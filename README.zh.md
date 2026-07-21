@@ -8,7 +8,7 @@
 
 **一款通过用户名、电子邮件、电话号码和全名查找人物的 OSINT 工具。**
 
-链接干净。Playwright 驱动。内置 DuckDuckGo 搜索。多语言支持。
+链接干净。Playwright 驱动。多语言支持。
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)

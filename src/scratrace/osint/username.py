@@ -22,6 +22,10 @@ from scratrace.osint.sites import Redirect, SiteRegistry, PLAYWRIGHT, INFO_KEY_T
 
 from urllib.parse import urlparse
 
+from playwright.async_api import async_playwright, TimeoutError as PwTimeoutError
+from playwright_stealth import Stealth
+from scratrace.osint.pw_scripts import get_checker, get_dork_checker, _DORK_REGISTRY
+
 CAT_LOWER = [
     "social", "forums", "blogs", "gaming", "dev", "creative",
     "misc", "professional", "people_search", "links", "other_info",
@@ -29,7 +33,14 @@ CAT_LOWER = [
 
 CONCURRENCY = 80
 TIMEOUT = 10
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+HEADERS = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+PW_LAUNCH_ARGS = [
+    "--headless=new",
+    "--disable-blink-features=AutomationControlled",
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-infobars",
+]
 
 
 def _extract_domain(url: str) -> str:
@@ -114,7 +125,14 @@ class UserName:
         for cat in CAT_LOWER:
             for dom, obj in cats.get(cat, {}).items():
                 t = obj.type_url
-                if kind == "code" and (
+                if kind == "browser" and t == PLAYWRIGHT:
+                    tmpl = self._template(obj)
+                    if tmpl:
+                        # имя скрипта = link без www; класс из info-ключа
+                        script = dom[4:] if dom.startswith("www.") else dom
+                        cls = INFO_KEY_TO_CLASS.get(next(iter(obj.info))) if obj.info else None
+                        out[cat].append((dom, tmpl, (obj, script, cls)))
+                elif kind == "code" and (
                     (isinstance(t, int) and t != PLAYWRIGHT)
                     or (isinstance(t, list) and t and not isinstance(t[0], str))
                 ):
@@ -131,13 +149,7 @@ class UserName:
                     if tmpl:
                         # URL берём из info (точка входа), Redirect — маркер
                         out[cat].append((dom, tmpl, t))
-                elif kind == "browser" and t == PLAYWRIGHT:
-                    tmpl = self._template(obj)
-                    if tmpl:
-                        # имя скрипта = link без www; класс из info-ключа
-                        script = dom[4:] if dom.startswith("www.") else dom
-                        cls = INFO_KEY_TO_CLASS.get(next(iter(obj.info))) if obj.info else None
-                        out[cat].append((dom, tmpl, (obj, script, cls)))
+                
         return out
 
     async def _fetch(self, session, url, allow_redirect: bool = True):
@@ -191,8 +203,6 @@ class UserName:
 
     async def _run_browser_check(self, page, script: str, cls: str | None) -> bool:
         """Выполнить профильный playwright-скрипт. Возвращает True = профиль есть."""
-        from scratrace.osint.pw_scripts import get_checker
-
         fn = get_checker(cls or "UserName", script)
         if fn is None:
             return False
@@ -200,22 +210,14 @@ class UserName:
             return bool(await fn(page, self.username))
         except NotImplementedError:
             return False
-        except Exception:
-            return False
 
     async def _run_dork_check(self, page, name: str) -> dict[str, str]:
         """Выполнить доркинг-скрипт. Возвращает {url: сниппет}."""
-        from scratrace.osint.pw_scripts import get_dork_checker
-
         fn = get_dork_checker(name)
         if fn is None:
             return {}
-        try:
-            result = await fn(page, self.username)
-            return result if isinstance(result, dict) else {}
-        except Exception as exc:
-            scratrace_log(f"dork {name} ({self.username}): {exc}", type=ERROR)
-            return {}
+        result = await fn(page, self.username)
+        return result if isinstance(result, dict) else {}
 
     async def _open_page(self, browser, url: str):
         """Открыть страницу на нужном URL (browser берёт на себя launch/goto).
@@ -227,10 +229,6 @@ class UserName:
             url = "https://" + url
         context = await browser.new_context(extra_http_headers=HEADERS)
         page = await context.new_page()
-        try:
-            from playwright.async_api import TimeoutError as PwTimeoutError
-        except ImportError:
-            PwTimeoutError = asyncio.TimeoutError
         try:
             await page.goto(url, timeout=TIMEOUT * 1000, wait_until="commit")
         except PwTimeoutError:
@@ -262,13 +260,11 @@ class UserName:
         if not flat:
             return {c: [] for c in CAT_LOWER}
 
-        try:
-            from playwright.async_api import async_playwright
-        except ImportError:
-            return {c: [] for c in CAT_LOWER}
-
         async with async_playwright() as pw:
-            chromium = await pw.chromium.launch(headless=True)
+            chromium = await pw.chromium.launch(
+                headless=False,
+                args=PW_LAUNCH_ARGS,
+            )
             try:
                 for cat, tmpl, payload in flat:
                     url = tmpl.replace("{username}", self.username)
@@ -280,8 +276,6 @@ class UserName:
         return {c: sorted(v) for c, v in result.items()}
 
     def _dork_targets(self) -> list[str]:
-        """Имена всех зарегистрированных доркинг-скриптов."""
-        from scratrace.osint.pw_scripts import _DORK_REGISTRY
         return list(_DORK_REGISTRY.keys())
 
     async def _collect_dorking(self, existing_urls: set[str], existing_domains: set[str]) -> list[str]:
@@ -363,46 +357,52 @@ class UserName:
                 url = await coro
             await _run(cat, url)
 
-        coros: list = []
+        dork_names = self._dork_targets()
+        tasks: list = []
 
+        # HTTP probes — запускаем как задачи, не ждут PW
         for kind in ("code", "html", "redirect"):
             for cat, lst in self._targets(kind).items():
                 for dom, tmpl, payload in lst:
-                    coros.append(
-                        runner(cat, self._probe(cat, dom, tmpl, payload, kind))
+                    tasks.append(
+                        asyncio.ensure_future(
+                            runner(cat, self._probe(cat, dom, tmpl, payload, kind))
+                        )
                     )
-
-        try:
-            from playwright.async_api import async_playwright
-        except ImportError:
-            async_playwright = None
-
-        dork_names = self._dork_targets()
 
         async with aiohttp.ClientSession() as session:
             self._session = session
 
-            if async_playwright is not None:
+            if dork_names:
                 async with async_playwright() as pw:
-                    chromium = await pw.chromium.launch(headless=True)
+                    chromium = await pw.chromium.launch(
+                        headless=False,
+                        args=PW_LAUNCH_ARGS,
+                    )
                     try:
+                        for name in dork_names:
+                            tasks.append(
+                                asyncio.ensure_future(
+                                    self._dork_runner(chromium, name, _run)
+                                )
+                            )
+
                         for cat, lst in self._targets("browser").items():
                             for dom, tmpl, payload in lst:
                                 url = tmpl.replace("{username}", self.username)
-                                coros.append(
-                                    self._browser_runner(
-                                        chromium, cat, url, payload, sem, _run
+                                tasks.append(
+                                    asyncio.ensure_future(
+                                        self._browser_runner(
+                                            chromium, cat, url, payload, sem, _run
+                                        )
                                     )
                                 )
 
-                        for name in dork_names:
-                            coros.append(self._dork_runner(name, _run))
-
-                        await asyncio.gather(*coros)
+                        await asyncio.gather(*tasks)
                     finally:
                         await chromium.close()
             else:
-                await asyncio.gather(*coros)
+                await asyncio.gather(*tasks)
 
         del self._session
 
@@ -420,13 +420,17 @@ class UserName:
 
         raw = found.get("other_info", [])
         deduped = []
+        seen_other_domains: set[str] = set()
         for item in raw:
-            url = item.split(" — ", 1)[0]
-            clean = url.rstrip("/")
-            if clean in existing:
+            if item.startswith("[") and "\n" in item:
+                domain_only = item.split("\n", 1)[0].strip("[]")
+            else:
+                domain_only = item.split(" — ", 1)[0].rstrip("/")
+            if _extract_domain(domain_only) in existing_domains:
                 continue
-            if _extract_domain(clean) in existing_domains:
+            if domain_only in seen_other_domains:
                 continue
+            seen_other_domains.add(domain_only)
             deduped.append(item)
         found["other_info"] = deduped
 
@@ -442,17 +446,28 @@ class UserName:
         on_result,
     ) -> None:
         """Browser check with shared chromium."""
-        try:
-            async with sem:
-                got_url, hit = await self._page_check(chromium, url, payload)
-            await on_result(cat, got_url if hit else None)
-        except Exception:
-            await on_result(cat, None)
+        async with sem:
+            got_url, hit = await self._page_check(chromium, url, payload)
+        await on_result(cat, got_url if hit else None)
 
-    async def _dork_runner(self, name: str, on_result) -> None:
-        """Dork script, no browser needed."""
-        for url, text in (await self._run_dork_check(None, name)).items():
-            await on_result("other_info", f"{url} — {text}")
+    async def _dork_runner(self, browser, name: str, on_result) -> None:
+        page = None
+        try:
+            if browser is not None:
+                context = await browser.new_context(
+                    viewport={"width": 1280, "height": 800},
+                    user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    locale="en-US",
+                    timezone_id="America/New_York",
+                )
+                page = await context.new_page()
+                await Stealth().apply_stealth_async(page)
+            for url, text in (await self._run_dork_check(page, name)).items():
+                text = "\n".join(f"    {l}" for l in text.split("\n"))
+                await on_result("other_info", f"[https://{url}]\n{text}")
+        finally:
+            if page is not None:
+                await page.close()
 
     async def _probe(self, cat, dom, tmpl, payload, kind):
         url = tmpl.replace("{username}", self.username)

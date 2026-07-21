@@ -8,7 +8,7 @@
 
 **An OSINT tool to find people by username, e-mail, phone number, and full name.**
 
-Clean links. Playwright-powered. DuckDuckGo dorking built in. Multilingual.
+Clean links. Playwright-powered. Multilingual.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
