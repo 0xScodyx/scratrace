@@ -62,10 +62,11 @@ Maigret relies on raw HTTP and misses anything that requires JavaScript.
 We run **real browser scripts** via Playwright for TikTok, Replit, Weebly,
 Wix, Fiverr, LiveJournal and more.
 
-### 3. DuckDuckGo dorking built in
+### 3. Dorking built in
 
-Beyond the site catalog, we automatically run a **DuckDuckGo search** for the
-username and show fresh web results under "Other Info". No API key, no captcha.
+Beyond the site catalog, we automatically search DuckDuckGo via Playwright
+for the username and show fresh web results under "Other Info".
+No API key, no captcha.
 
 ### 4. Beautiful, friendly interface
 
@@ -97,27 +98,48 @@ catalog. The database stays honest without manual effort.
 
 ## 🚀 Installation
 
-The fastest way is to install straight from GitHub:
+### Install from PyPI
+
+```bash
+pip install scratrace
+```
+
+### Install from GitHub (latest)
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
 ```
 
-Or a specific tagged version:
+A specific tagged version:
 
 ```bash
-pip install git+https://github.com/0xScodyx/scratrace.git@v0.1.0
+pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
 ```
 
-For development (editable mode):
+### Install Playwright browsers
+
+scratrace uses Playwright for browser-based checks and DuckDuckGo dorking.
+After installing the package, run:
+
+```bash
+playwright install chromium
+```
+
+This downloads a Chromium browser (~150MB) to `~/.cache/ms-playwright`.
+
+> **Note:** `playwright install` is required. If you skip it, browser checks and
+> DuckDuckGo dorking will be skipped without crashing.
+
+### Development (editable mode)
 
 ```bash
 git clone https://github.com/0xScodyx/scratrace.git
 cd scratrace
 pip install -e .
+playwright install chromium
 ```
 
-Dependencies: `aiohttp`, `rich`, `pytest`, `pytest-xdist`.
+---
 
 ## 💻 Usage
 
@@ -135,6 +157,12 @@ from scratrace.osint import UserName
 
 results = UserName("scodyx").check_all()
 # -> {'social': [...], 'forums': [...], 'gaming': [...], ...}
+```
+
+### View logs
+
+```bash
+scratrace-log        # tail the latest search log
 ```
 
 ---
