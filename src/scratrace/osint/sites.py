@@ -221,10 +221,12 @@ class SiteRegistry:
         if o is None:
             return "dynamic"
         t = o.type_url
-        if isinstance(t, (int, list)) and t and not isinstance(t[0], str):
+        if isinstance(t, int):
             return "code"
-        if isinstance(t, (str, list)) and t and isinstance(t[0], str):
-            return "html"
+        if isinstance(t, list) and t:
+            if isinstance(t[0], str):
+                return "html"
+            return "code"
         if o.info and ("error" in o.info or "probe" in o.info):
             return "redirect"
         return "dynamic"
