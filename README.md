@@ -36,38 +36,50 @@ sites that lie are flagged and dropped.
 
 ---
 
-## ⚡ Our advantages
+## ⚡ Why scratrace?
 
-> Why `scratrace` instead of yet another `sherlock` fork?
+> We built upon the rich site database of [Maigret](https://github.com/soxoj/maigret) — the most comprehensive OSINT catalog out there. Then we made it faster, cleaner, and smarter.
 
-### 1. Clean links with no false positives
+### 1. Zero false positives — guaranteed
 
-Most OSINT tools (including popular ones) consider a site "found" if it returns
-**any** response — even a `404` or a "user does not exist" page. We verify every
-site with a double request:
+Most OSINT tools (including Maigret and Sherlock forks) report a hit if a server
+returns **any** HTTP 200, even a "user not found" page. We don't.
 
-- we substitute a **popular** username (`news`, `user`, `admin`);
-- we substitute a **deliberately random** `kljwwdlkjadkljakdl`.
+Every site in our catalog goes through a **double check**:
 
-If the response codes **match** — the site lies (always returns `200`) →
-`type_url=None`, the link is not considered working. If the codes **differ** — the
-site is honest → we record the real code (`type_url=200`) and only then use it.
+- we request a **known-popular** username (`news`, `admin`, `user`);
+- we request a **deliberately random** one (`kljwwdlkjadkljakdl`).
+
+If both return the same code — the site lies → we drop it (`type_url=None`).
+If they differ — the site is honest → we record the real detection code.
 
 ```
-username=news      → 200
-username=kljwwd... → 404   ✅ honest, type_url=200
+news      → 200
+kljwwd…   → 404   ✅ honest, type_url=200
 
-username=news      → 200
-username=kljwwd... → 200   ❌ lies, type_url=None (dropped)
+news      → 200
+kljwwd…   → 200   ❌ lying, dropped
 ```
 
-The catalog isn't the largest yet, but **every link in it is current and verified**.
+**Every link in the result is a real profile — not a guess.**
 
-### 2. A beautiful, friendly interface
+### 2. Playwright for SPA & antibot sites
 
-A gradient menu, a live progress bar with a percentage and a growing results feed,
-categories with accent colors. Everything is built on
-[`rich`](https://github.com/Textualize/rich).
+Maigret and Sherlock rely on raw HTTP and miss anything that requires JavaScript.
+We run **real browser scripts** via Playwright for TikTok, Replit, Weebly,
+Wix, Fiverr, LiveJournal and more — sites that hide their content behind
+login walls, SPAs, or antibot checks.
+
+### 3. DuckDuckGo dorking built in
+
+Beyond the site catalog, we automatically run a **DuckDuckGo search** for the
+username and show fresh results from the web under "Other Info". No API key
+needed, no captcha — powered by `ddgs`.
+
+### 4. Beautiful, friendly interface
+
+A gradient menu, live progress bar with percentage, growing results feed
+with color-coded categories. Built on [`rich`](https://github.com/Textualize/rich).
 
 <div align="center">
 
@@ -75,9 +87,9 @@ categories with accent colors. Everything is built on
 
 </div>
 
-### 3. Translations into multiple languages
+### 5. Multilingual
 
-A built-in i18n system. Currently supported:
+Built-in i18n. Switch languages on the fly in Settings:
 
 | Language   | Code |
 | ---------- | ---- |
@@ -85,7 +97,10 @@ A built-in i18n system. Currently supported:
 | 🇬🇧 English | `en` |
 | 🇨🇳 中文    | `cn` |
 
-Switch via the **Settings** menu → choose language.
+### 6. Always fresh — dead sites get pruned
+
+A periodic `pytest` run detects dead and lying sites and removes them from the
+catalog automatically. The database stays honest without manual effort.
 
 ---
 
