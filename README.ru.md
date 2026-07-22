@@ -91,6 +91,8 @@ Replit, Weebly, Wix, Fiverr, LiveJournal и других.
 
 ### 6. Скорость
 
+pyscratrace быстрый. Поиск username занимает примерно 15-30 секунд.
+
 ---
 
 ## 🚀 Установка

@@ -89,6 +89,8 @@ Built-in i18n. Switch languages on the fly in Settings:
 
 ### 6. Speed
 
+pyscratrace is fast. A typical username search takes ~15-30 seconds.
+
 ---
 
 ## 🚀 Installation
