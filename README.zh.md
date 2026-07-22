@@ -42,15 +42,14 @@
 
 ### 1. SQLite 替代 JSON——更轻量、有类型
 
-Maigret 的 3200+ 站点存在 **4.4 万行的 JSON 文件**（`~/.maigret/data.json`，1.4MB）中。
-没有 schema，全量加载到内存，diff 巨大，无法索引。
+大多数 OSINT 工具将 3000+ 站点存在 **4.4 万行的 JSON 文件**（`data.json`，1.4MB）中。
+没有 schema，全量加载到内存，无法索引。
 
 我们使用 **SQLite**（`SiteRegistry.db`，536KB）。列有类型（`int`、`str`、`JSON`、`bool`），
 支持 `SELECT`、`UPDATE`、`DELETE`，数据库再大也保持快速。
 
 ### 2. Playwright 处理 SPA 和反爬站点
 
-Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
 我们通过 Playwright 运行**真实浏览器脚本**，支持 TikTok、Replit、Weebly、Wix、Fiverr 等。
 
 ### 3. 内置搜索
@@ -82,10 +81,9 @@ Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
 
 在 **Settings** 菜单中切换 → 选择语言。
 
-### 6. 自动清理失效站点
+### 6. 速度
 
-定期运行 `pytest` 可检测失效和「撒谎」站点并自动从目录中移除。
-数据库无需人工维护即可保持准确。
+pyscratrace 速度很快。一次典型的用户名搜索大约需要 15-30 秒。
 
 ## 🚀 安装
 
@@ -151,13 +149,10 @@ scratrace-log        # 查看最新搜索日志
 
 ---
 
-## 🧪 测试与目录清理
-
-失效站点通过 `pytest` 检测并自动清除：
+## 🧪 测试
 
 ```bash
-pytest tests/test_sites.py -n auto     # 将失效站点写入 .dead_sites.json
-python tests/cut_sites.py              # 从 sites.py 中删除它们
+pytest
 ```
 
 ---
@@ -194,6 +189,12 @@ tests/
 </a>
 
 > 想出现在这里？向 `sites.py` 添加站点或改进检查逻辑——欢迎提交 PR！
+
+---
+
+## 🤝 贡献指南
+
+所有 PR 和提交请发往 `dev` 分支。`main` 分支仅用于稳定发布。不要直接合并到 `main`——请向 `dev` 发起 PR。
 
 ---
 

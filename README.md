@@ -44,12 +44,11 @@ sites that lie are flagged and dropped.
 
 ### 1. SQLite instead of JSON — lean & typed
 
-Maigret stores its 3200+ sites in a **44k-line JSON file** (`~/.maigret/data.json`, 1.4MB).
+Most OSINT tools store their 3000+ sites in a **44k-line JSON file** (`data.json`, 1.4MB).
 That works, but:
 
-- no schema — every field is a string, no validation
+- no schema — every field is just a string
 - the entire JSON must be loaded into memory at once
-- diffs are massive even for tiny changes
 - no indexing — finding a site means scanning the whole dict
 
 We use **SQLite** (`SiteRegistry.db`, 536KB). Every column is typed
@@ -58,7 +57,6 @@ and the DB stays fast regardless of size.
 
 ### 2. Playwright for SPA & antibot sites
 
-Maigret relies on raw HTTP and misses anything that requires JavaScript.
 We run **real browser scripts** via Playwright for TikTok, Replit, Weebly,
 Wix, Fiverr, LiveJournal and more.
 
@@ -89,10 +87,9 @@ Built-in i18n. Switch languages on the fly in Settings:
 | 🇬🇧 English | `en` |
 | 🇨🇳 中文    | `cn` |
 
-### 6. Always fresh — dead sites get pruned automatically
+### 6. Speed
 
-A regular `pytest` run catches dead and lying sites and removes them from the
-catalog. The database stays honest without manual effort.
+pyscratrace is fast. A typical username search takes ~15-30 seconds.
 
 ---
 
@@ -160,10 +157,10 @@ scratrace-log        # tail the latest search log
 
 ---
 
-## 🧪 Testing and catalog cleanup
+## 🧪 Testing
 
 ```bash
-pytest tests/ -n auto       # reachability + OSINT behavioural checks
+pytest
 ```
 
 ---
@@ -203,6 +200,12 @@ Thanks to everyone making `scratrace` cleaner and more accurate:
 </a>
 
 > Want to show up here? Add a site to `sites.py` or improve the check — PRs welcome!
+
+---
+
+## 🤝 Contributing
+
+All PRs and commits must go to the `dev` branch only. The `main` branch is reserved for stable releases. Don't merge to `main` directly — open a PR against `dev` instead.
 
 ---
 
