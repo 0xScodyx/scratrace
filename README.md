@@ -11,7 +11,7 @@
 Clean links. Playwright-powered. Multilingual.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
 </div>
@@ -98,7 +98,7 @@ catalog. The database stays honest without manual effort.
 
 ## 🚀 Installation
 
-The fastest way is to install straight from GitHub:
+> **License change:** scratrace was previously under GPL v3. As of v0.2.2 it is now MIT licensed.
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
@@ -107,19 +107,24 @@ pip install git+https://github.com/0xScodyx/scratrace.git
 Or a specific tagged version:
 
 ```bash
-pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
+pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.2
 ```
 
-### Install Playwright browsers
+### Browser support (optional)
 
-scratrace requires Playwright for browser-based checks and DuckDuckGo dorking.
-After installing the package, run:
+For Playwright-based browser checks and DuckDuckGo dorking, install the extra dependency and the browser:
 
 ```bash
+pip install "scratrace[browser] @ git+https://github.com/0xScodyx/scratrace.git"
 playwright install chromium
 ```
 
-This downloads a Chromium browser (~150MB) to `~/.cache/ms-playwright`.
+If you already have the base package and want to add browser support later:
+
+```bash
+pip install playwright playwright-stealth
+playwright install chromium
+```
 
 ### Development (editable mode)
 
@@ -127,7 +132,6 @@ This downloads a Chromium browser (~150MB) to `~/.cache/ms-playwright`.
 git clone https://github.com/0xScodyx/scratrace.git
 cd scratrace
 pip install -e .
-playwright install chromium
 ```
 
 ## 💻 Usage
@@ -204,4 +208,4 @@ Thanks to everyone making `scratrace` cleaner and more accurate:
 
 ## 📜 License
 
-GNU General Public License v3.0 © scratrace contributors
+MIT © scratrace contributors

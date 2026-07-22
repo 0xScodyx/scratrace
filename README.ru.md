@@ -11,7 +11,7 @@
 Чистые ссылки. Playwright. Мультиязычность.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
 </div>
@@ -100,7 +100,7 @@ Replit, Weebly, Wix, Fiverr, LiveJournal и других.
 
 ## 🚀 Установка
 
-Самый быстрый способ — поставить прямо из GitHub:
+> **Смена лицензии:** scratrace ранее был под GPL v3. Начиная с v0.2.2 лицензия изменена на MIT.
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
@@ -109,19 +109,24 @@ pip install git+https://github.com/0xScodyx/scratrace.git
 Или конкретную версию по тегу:
 
 ```bash
-pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
+pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.2
 ```
 
-### Установка браузеров Playwright
+### Браузерные проверки (опционально)
 
-scratrace требует Playwright для браузерных проверок и доркинга DuckDuckGo.
-После установки пакета выполни:
+Для Playwright-проверок и DuckDuckGo-доркинга доставь браузерную зависимость и сам браузер:
 
 ```bash
+pip install "scratrace[browser] @ git+https://github.com/0xScodyx/scratrace.git"
 playwright install chromium
 ```
 
-Эта команда скачает Chromium (~150MB) в `~/.cache/ms-playwright`.
+Если сначала поставил базовый пакет, а потом решил добавить браузер:
+
+```bash
+pip install playwright playwright-stealth
+playwright install chromium
+```
 
 ### Разработка (editable-режим)
 
@@ -129,7 +134,6 @@ playwright install chromium
 git clone https://github.com/0xScodyx/scratrace.git
 cd scratrace
 pip install -e .
-playwright install chromium
 ```
 
 ## 💻 Использование
@@ -206,4 +210,4 @@ tests/
 
 ## 📜 Лицензия
 
-GNU General Public License v3.0 © scratrace contributors
+MIT © scratrace contributors

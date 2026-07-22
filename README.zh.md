@@ -11,7 +11,7 @@
 链接干净。Playwright 驱动。多语言支持。
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
 </div>
@@ -89,7 +89,7 @@ Maigret 只使用 HTTP，无法处理需要 JavaScript 的网站。
 
 ## 🚀 安装
 
-最快的方式是直接从 GitHub 安装：
+> **许可变更：** scratrace 此前使用 GPL v3 许可证。从 v0.2.2 起改为 MIT 许可证。
 
 ```bash
 pip install git+https://github.com/0xScodyx/scratrace.git
@@ -98,19 +98,24 @@ pip install git+https://github.com/0xScodyx/scratrace.git
 或安装指定标签的版本：
 
 ```bash
-pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.1
+pip install git+https://github.com/0xScodyx/scratrace.git@v0.2.2
 ```
 
-### 安装 Playwright 浏览器
+### 浏览器检测（可选）
 
-scratrace 需要 Playwright 进行浏览器检测和 DuckDuckGo 搜索。
-安装包后运行：
+需要 Playwright 浏览器检测和 DuckDuckGo 搜索时，安装额外依赖并下载浏览器：
 
 ```bash
+pip install "scratrace[browser] @ git+https://github.com/0xScodyx/scratrace.git"
 playwright install chromium
 ```
 
-此命令下载 Chromium 浏览器（约 150MB）到 `~/.cache/ms-playwright`。
+如果已安装基础包，之后想添加浏览器支持：
+
+```bash
+pip install playwright playwright-stealth
+playwright install chromium
+```
 
 ### 开发模式（可编辑安装）
 
@@ -118,7 +123,6 @@ playwright install chromium
 git clone https://github.com/0xScodyx/scratrace.git
 cd scratrace
 pip install -e .
-playwright install chromium
 ```
 
 ## 💻 使用
@@ -195,4 +199,4 @@ tests/
 
 ## 📜 许可证
 
-GNU General Public License v3.0 © scratrace contributors
+MIT © scratrace contributors
