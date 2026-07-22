@@ -408,3 +408,12 @@ async def whatsapp(page, phone: str) -> bool:
 @browser.numberphone("telegram.org")
 async def telegram(page, phone: str) -> bool:
     raise NotImplementedError
+
+
+@browser.username("leetcode.cn")
+async def leetcode_cn(page, username: str) -> bool:
+    try:
+        await page.wait_for_timeout(8000)
+    except PwTimeoutError:
+        pass
+    return "/404/" not in page.url
