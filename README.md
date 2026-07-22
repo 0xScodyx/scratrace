@@ -11,7 +11,7 @@
 Clean links. Playwright-powered. Multilingual.
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
 </div>
@@ -204,4 +204,4 @@ Thanks to everyone making `scratrace` cleaner and more accurate:
 
 ## 📜 License
 
-MIT © scratrace contributors
+GNU General Public License v3.0 © scratrace contributors

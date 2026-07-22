@@ -11,7 +11,7 @@
 链接干净。Playwright 驱动。多语言支持。
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
 
 </div>
@@ -195,4 +195,4 @@ tests/
 
 ## 📜 许可证
 
-MIT © scratrace contributors
+GNU General Public License v3.0 © scratrace contributors
