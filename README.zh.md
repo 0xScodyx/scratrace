@@ -197,12 +197,6 @@ tests/
 
 ---
 
-## 🤝 贡献指南
-
-所有 PR 和提交请发往 `dev` 分支。`main` 分支仅用于稳定发布。不要直接合并到 `main`——请向 `dev` 发起 PR。
-
----
-
 ## 📜 许可证
 
 MIT © scratrace contributors

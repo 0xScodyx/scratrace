@@ -206,12 +206,6 @@ Thanks to everyone making `scratrace` cleaner and more accurate:
 
 ---
 
-## 🤝 Contributing
-
-All PRs and commits must go to the `dev` branch only. The `main` branch is reserved for stable releases. Don't merge to `main` directly — open a PR against `dev` instead.
-
----
-
 ## 📜 License
 
 MIT © scratrace contributors
