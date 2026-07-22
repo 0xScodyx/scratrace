@@ -24,19 +24,20 @@ from urllib.parse import urlparse
 
 try:
     from playwright.async_api import async_playwright, TimeoutError as PwTimeoutError
-except ImportError:
+except (ImportError, AttributeError):
     async_playwright = None  # type: ignore[assignment]
     class _PwTimeoutError(Exception): ...
     PwTimeoutError: type[Exception] = _PwTimeoutError  # type: ignore[no-redef]
+    scratrace_log("playwright not available — browser checks and dorking disabled", type=WARNING)
 else:
     PwTimeoutError: type[Exception] = PwTimeoutError  # type: ignore[no-redef]
 
 try:
     from playwright_stealth import Stealth
-except ImportError:
+except (ImportError, AttributeError):
     Stealth = None
 
-from scratrace.osint.pw_scripts import get_checker, get_dork_checker, _DORK_REGISTRY
+from scratrace.osint.pw_scripts import get_checker, get_dork_checker, _DORK_REGISTRY, PwError
 
 CAT_LOWER = [
     "social", "forums", "blogs", "gaming", "dev", "creative",
@@ -272,19 +273,23 @@ class UserName:
         if not flat or async_playwright is None:
             return {c: [] for c in CAT_LOWER}
 
-        async with async_playwright() as pw:
-            chromium = await pw.chromium.launch(
-                headless=False,
-                args=PW_LAUNCH_ARGS,
-            )
-            try:
-                for cat, tmpl, payload in flat:
-                    url = tmpl.replace("{username}", self.username)
-                    got_url, hit = await self._page_check(chromium, url, payload)
-                    if hit:
-                        result[cat].append(got_url)
-            finally:
-                await chromium.close()
+        try:
+            async with async_playwright() as pw:
+                chromium = await pw.chromium.launch(
+                    headless=False,
+                    args=PW_LAUNCH_ARGS,
+                )
+                try:
+                    for cat, tmpl, payload in flat:
+                        url = tmpl.replace("{username}", self.username)
+                        got_url, hit = await self._page_check(chromium, url, payload)
+                        if hit:
+                            result[cat].append(got_url)
+                finally:
+                    await chromium.close()
+        except PwError:
+            scratrace_log("browser not available — skipping browser checks", type=WARNING)
+            return {c: [] for c in CAT_LOWER}
         return {c: sorted(v) for c, v in result.items()}
 
     def _dork_targets(self) -> list[str]:
@@ -385,35 +390,39 @@ class UserName:
         async with aiohttp.ClientSession() as session:
             self._session = session
 
-            if async_playwright is not None and dork_names:
-                async with async_playwright() as pw:
-                    chromium = await pw.chromium.launch(
-                        headless=False,
-                        args=PW_LAUNCH_ARGS,
-                    )
-                    try:
-                        for name in dork_names:
-                            tasks.append(
-                                asyncio.ensure_future(
-                                    self._dork_runner(chromium, name, _run)
-                                )
-                            )
-
-                        for cat, lst in self._targets("browser").items():
-                            for dom, tmpl, payload in lst:
-                                url = tmpl.replace("{username}", self.username)
+            try:
+                if async_playwright is not None and dork_names:
+                    async with async_playwright() as pw:
+                        chromium = await pw.chromium.launch(
+                            headless=False,
+                            args=PW_LAUNCH_ARGS,
+                        )
+                        try:
+                            for name in dork_names:
                                 tasks.append(
                                     asyncio.ensure_future(
-                                        self._browser_runner(
-                                            chromium, cat, url, payload, sem, _run
-                                        )
+                                        self._dork_runner(chromium, name, _run)
                                     )
                                 )
 
-                        await asyncio.gather(*tasks)
-                    finally:
-                        await chromium.close()
-            else:
+                            for cat, lst in self._targets("browser").items():
+                                for dom, tmpl, payload in lst:
+                                    url = tmpl.replace("{username}", self.username)
+                                    tasks.append(
+                                        asyncio.ensure_future(
+                                            self._browser_runner(
+                                                chromium, cat, url, payload, sem, _run
+                                            )
+                                        )
+                                    )
+
+                            await asyncio.gather(*tasks)
+                        finally:
+                            await chromium.close()
+                else:
+                    await asyncio.gather(*tasks)
+            except PwError:
+                scratrace_log("browser not available — skipping browser checks and dorking", type=WARNING)
                 await asyncio.gather(*tasks)
 
         del self._session
